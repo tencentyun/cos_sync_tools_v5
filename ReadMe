@@ -1,0 +1,42 @@
+同步工具用于将本地的文件和目录上传到cos上, 文件和目录结构和本地一致,
+工具为增量同步，将已经同步的文件路径及mtime属性保存在db目录下, 
+如本地文件若已经同步过(即文件信息可以在db中查到，且mtime属性一致)，则不会重复上传,否则会重新上传
+
+此同步工具适用于cos 4.x and 5.x
+
+# COS版本
+4.X AND 5.X
+
+# 系统要求
+jdk 1.7或1.8 
+
+# 配置方法
+   1. 配置conf/config.ini里的appid, secret_id, secret_key
+      可在秘钥控制台(https://console.qcloud.com/capi)查询
+   2. 配置conf/config.ini中要同步的目录路径local_path
+   3. 配置cos 5.x 的bucket分区region, COS地域的简称请参照
+   https://www.qcloud.com/document/product/436/6224
+
+# 运行
+
+linux环境下
+sh start_cos_sync.sh
+
+windows环境下
+双击 start_cos_sync.bat
+
+
+# 目录信息
+conf : 配置文件目录
+log  : 日志目录(若提交同步工具的工单，请将该目录打包为附件提交)
+db   : 存储同步记录的数据库文件目录
+src  : java 源程序
+dep  : 编译生成的可运行的JAR包
+
+# 常见问题
+1 同步工具判断是否需要重传是根据本地db目录下数据文件中的上传记录，因此如果通过别的方式(如控制台)删除了
+  文件, 则再次运行同步工具，不会把本地的该文件再次上传上去
+2 同步工具记录的数据保存在db目录下的数据文件里，如果清空改目录, 再运行同步工具会对数据目录下的文件全量的上传一遍, 如果cos上存在该文件, 则会覆盖
+3 上传前确保已经在控制台上创建过bucket
+4 windows路径使用\\进行分割
+5 如果有偶发的失败问题，可以重跑同步程序, 不会重复上传已经成功上传的文件
