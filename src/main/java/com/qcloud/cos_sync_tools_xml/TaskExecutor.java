@@ -23,13 +23,13 @@ public class TaskExecutor {
     private static final Logger log = LoggerFactory.getLogger(TaskExecutor.class);
 
     public static final TaskExecutor instance = new TaskExecutor();
-    private static final int maxUploadTask = 10000;
-    private Semaphore semaphore = new Semaphore(maxUploadTask);
     private COSClient cosClient = null;
-    private TransferManager transferManager = null;
-    private static final int maxUploadExecutorNum = 64;
-    private ExecutorService pollTaskExecutor = Executors.newFixedThreadPool(maxUploadExecutorNum);
-
+    private TransferManager transferManagerForBigFile = null;
+    private TransferManager transferManagerForSmallFile = null;
+    private static final int maxBigFileUploadExecutorNum = 4;
+    private static final int maxSmallFileUploadExecutorNum = 64;
+    private Semaphore semaphore = new Semaphore(maxBigFileUploadExecutorNum + maxSmallFileUploadExecutorNum);
+    private ExecutorService pollTaskExecutor = Executors.newFixedThreadPool((maxBigFileUploadExecutorNum + maxSmallFileUploadExecutorNum) * 2) ;
     public TaskExecutor() {
         super();
         COSCredentials cred = new BasicCOSCredentials(Config.instance.getAppid(),
@@ -39,8 +39,8 @@ public class TaskExecutor {
             config.setHttpProtocol(HttpProtocol.https);
         }
         cosClient = new COSClient(cred, config);
-        transferManager = new TransferManager(cosClient, Executors.newFixedThreadPool(maxUploadExecutorNum));
-        
+        transferManagerForBigFile = new TransferManager(cosClient, Executors.newFixedThreadPool(maxBigFileUploadExecutorNum));
+        transferManagerForSmallFile = new TransferManager(cosClient, Executors.newFixedThreadPool(maxSmallFileUploadExecutorNum));        
     }
 
     private String convertLocalPathToCosPath(File localFile, String localPathFolder) {
@@ -71,8 +71,13 @@ public class TaskExecutor {
         }
 
         try {
-            UploadFileTask task =
-                    new UploadFileTask(localFile, bucketName, key, storageClass, transferManager, semaphore);
+            UploadFileTask task = null;
+            final long bigFileThreshold = 8 * 1024 * 1024;
+            if (localFile.length() >= bigFileThreshold) {
+                task = new UploadFileTask(localFile, bucketName, key, storageClass, transferManagerForBigFile, semaphore);
+            } else {
+                task = new UploadFileTask(localFile, bucketName, key, storageClass, transferManagerForSmallFile, semaphore);
+            }
             pollTaskExecutor.submit(task);
         } catch (RejectedExecutionException e) {
             String errMsg = String.format(
@@ -89,7 +94,8 @@ public class TaskExecutor {
         } catch (InterruptedException e) {
             log.error(e.toString());
         }
-        transferManager.shutdownNow();
+        transferManagerForBigFile.shutdownNow();
+        transferManagerForSmallFile.shutdownNow();
         cosClient.shutdown();
     }
 }
