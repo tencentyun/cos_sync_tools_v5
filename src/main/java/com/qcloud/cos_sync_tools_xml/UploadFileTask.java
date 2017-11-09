@@ -91,7 +91,7 @@ public class UploadFileTask implements Runnable {
                             String.format("[fail] [localpath: %s]", localFile.getAbsolutePath());
                     System.out.println(printMsg);
                     String errMsg = String.format(
-                            "[ok] [localpath: %s] [cosPath: %s] [length: %d] [Exception: %s]",
+                            "[fail] [localpath: %s] [cosPath: %s] [length: %d] [Exception: %s]",
                             localFile.getAbsolutePath(), key,
                             localFile.isDirectory() ? 0 : localFile.length(), e.toString());
                     log.error(errMsg);
