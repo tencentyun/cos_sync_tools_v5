@@ -3,6 +3,7 @@ package com.qcloud.cos_sync_tools_xml.meta;
 import java.io.File;
 import java.io.FileInputStream;
 import java.util.Properties;
+import java.util.regex.Pattern;
 
 /**
  * 同步工具的配置类, 从文件中读取配置, 并进行检查, 配置为JSON格式
@@ -58,7 +59,7 @@ public class Config {
             }
         }
 
-        String[] validConfigKeyArry = {"appid", "secret_id", "secret_key", "bucket", "region",
+        String[] validConfigKeyArry = {"secret_id", "secret_key", "bucket", "region",
                 "local_path", "cos_path", "storage_class", "enable_https"};
 
         for (String validKey : validConfigKeyArry) {
@@ -69,7 +70,7 @@ public class Config {
             }
         }
 
-        if (!checkAppid() || !checkLocalPath() || !checkCosPath() || !checkStorageClass()
+        if (!checkBucket() || !checkLocalPath() || !checkCosPath() || !checkStorageClass()
                 || !checkEnableHttps()) {
             return;
         }
@@ -81,12 +82,22 @@ public class Config {
 
 
     /**
-     * check APPID, TimeOut等配置是否正确
+     * check bucket是否正确
      * 
      * @return 配置正确返回True, 否则False
      */
-    private boolean checkAppid() {
-        return checkValueIntStr("appid");
+    private boolean checkBucket() {
+        String bucketName = this.prop.getProperty("bucket").trim();
+        String parrtern = ".*-(125|100)[0-9]{3,}$";
+        if (Pattern.matches(parrtern, bucketName)) {
+            return true;
+        } else {
+            this.initConfigFlag = false;
+            this.initConfigErr =
+                    "wrong config, bucket name must contain legal appid. example: music-1251122334";
+            return false;
+        }
+        
     }
 
     private boolean checkStorageClass() {
@@ -192,10 +203,6 @@ public class Config {
 
     public String getInitConfigErr() {
         return initConfigErr;
-    }
-
-    public String getAppid() {
-        return this.prop.getProperty("appid").trim();
     }
 
     public String getSecretId() {

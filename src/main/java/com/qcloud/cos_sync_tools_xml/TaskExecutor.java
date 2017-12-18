@@ -32,9 +32,9 @@ public class TaskExecutor {
     private ExecutorService pollTaskExecutor = Executors.newFixedThreadPool((maxBigFileUploadExecutorNum + maxSmallFileUploadExecutorNum) * 2) ;
     public TaskExecutor() {
         super();
-        COSCredentials cred = new BasicCOSCredentials(Config.instance.getAppid(),
-                Config.instance.getSecretId(), Config.instance.getSecretKey());
+        COSCredentials cred = new BasicCOSCredentials(Config.instance.getSecretId(), Config.instance.getSecretKey());
         ClientConfig config = new ClientConfig(new Region(Config.instance.getRegion()));
+        config.setUserAgent("cos-sync-tools-v5.1");
         if (Config.instance.getEnableHttps() != 0) {
             config.setHttpProtocol(HttpProtocol.https);
         }

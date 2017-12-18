@@ -4,7 +4,7 @@
 
 	<groupId>com.qcloud</groupId>
 	<artifactId>cos_sync_tools_xml</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
+	<version>v5.1</version>
 	<packaging>jar</packaging>
 
 	<name>cos_sync_tools_xml</name>
@@ -28,7 +28,7 @@
 		<dependency>
 			<groupId>com.qcloud</groupId>
 			<artifactId>cos_api</artifactId>
-			<version>5.2.1</version>
+			<version>5.2.3</version>
 		</dependency>
 	</dependencies>
 
